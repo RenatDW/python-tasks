@@ -1,5 +1,5 @@
 def main():
-    list1, list2 = parse_file('input1.txt')
+    list1, list2 = parse_file('input5.txt')
     if not list1 or not list2:
         print("Один из списков пуст или файл содержит некорректные данные.")
         return
