@@ -1,82 +1,80 @@
-# import sys
-def count_arguments(*args, **kwargs):
-    positional_count = len(args)
-    keyword_count = len(kwargs)
-    return (positional_count, keyword_count)
-result1 = count_arguments(1, 2, 3, a=4, b=5)
-print(result1)  # Вывод: (3, 2)
-
-result2 = count_arguments(10, 20)
-print(result2)  # Вывод: (2, 0)
-
-result3 = count_arguments()
-print(result3)  # Вывод: (0, 0)
-
-result4 = count_arguments(x=1, y=2, z=3)
-print(result4)  # Вывод: (0, 3)
-# def main ():
-#    a = parse_file()
-#    change_row_position(a)
-#    save_in_file(a)
+import sys
 
 
-# def change_row_position(a):
-#     index_min = 0
-#     index_max = 0
-#     value_min = sys.maxsize
-#     value_max = -sys.maxsize - 1
-#     for i in range(len(a)):
-#         val = get_row_sum(a, i)
-#         if value_min > val:
-#             index_min = i
-#             value_min = val
-#         if value_max < val:
-#             index_max = i
-#             value_max = val
-#     temp = [0]*len(a)
-
-#     for i in range(len(a)):
-#         temp[i] = a[i][index_max]
-
-#     for i in range(len(a)):
-#         a[i][index_max] = a[i][index_min]
-
-#     for i in range(len(a)):
-#         a[i][index_min] = temp[i]
 
 
-# def get_row_sum(a, i):
-#     sum = 0
-#     for j in range(len(a)):
-#         sum += a[j][i]
-#     return sum
+def main():
+    matrix = parse_file('input3.txt')
+    if not matrix or not check_consistency(matrix):
+        print("Файл пуст или содержит некорректные данные.")
+        return
 
-# def parse_file():
-#     with open('input.txt') as f:
-#         s = f.readlines()
-#         a = [[]] * len(s)
-#         for i in range(len(s)):
-#             line = s[i].split(" ")
-#             k = [0] * len(line)
-#             for j in range(len(line)):
-#                 k[j] = int(line[j])
-#             a[i] = k
-#     return a
-   
-# def save_in_file(c):
-#     ans = ""
-#     for i in range(len(c)):
-#         for j in range(len(c[0])):
-#             if j == 0:
-#                 ans += str(c[i][j])
-#             else:
-#                 ans += " " + str(c[i][j])
-#         ans += "\n"
-        
+    change_column_positions(matrix)
 
-#     with open("output.txt", "w") as file:
-#         file.write(ans)
+    save_in_file(matrix)
 
-    
-# if __name__ == '__main__':
-#     main()
+def change_column_positions(matrix):
+    if not matrix or not matrix[0]:
+        return
+
+    index_min = 0
+    index_max = 0
+    value_min = sys.maxsize
+    value_max = -sys.maxsize - 1
+
+    for j in range(len(matrix[0])):
+        column_sum = get_column_sum(matrix, j)
+        if column_sum < value_min:
+            index_min = j
+            value_min = column_sum
+        if column_sum > value_max:
+            index_max = j
+            value_max = column_sum
+
+    for i in range(len(matrix)):
+        matrix[i][index_min], matrix[i][index_max] = matrix[i][index_max], matrix[i][index_min]
+
+
+def get_column_sum(matrix, column_index):
+    return sum(row[column_index] for row in matrix)
+
+def check_consistency(matrix):
+    first_row_length = len(matrix[0])
+    for row in matrix:
+        if len(row) != first_row_length:
+            return False
+    return True
+
+def parse_file(filename):
+    matrix = []
+    try:
+        with open(filename, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        row = list(map(int, line.split()))
+                        matrix.append(row)
+                    except ValueError:
+                        print(f"Некорректная строка в файле: {line}")
+                        continue
+    except FileNotFoundError:
+        print(f"Ошибка: Файл '{filename}' не найден.")
+    except Exception as e:
+        print(f"Неизвестная ошибка: {e}")
+
+    return matrix
+
+
+def save_in_file(matrix):
+    if not matrix:
+        print("Нет данных для сохранения.")
+        return
+
+    with open("output.txt", "w") as file:
+        for row in matrix:
+            file.write(" ".join(map(str, row)) + "\n")
+
+
+if __name__ == '__main__':
+    main()
