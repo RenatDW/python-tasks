@@ -1,96 +1,75 @@
-def main ():
-    a = []
-    c = []
-    
-    parse_file(a, c)
-    result = find_matching_elements(a, c)
-    
-    save_in_file(result)
-    
-    
-def find_matching_elements(list1, list2):
-    matching_elements = []
-    
-    min_length = min(len(list1), len(list2))
-    
-    for i in range(min_length):
-        if list1[i] == list2[i]:
-            matching_elements.append(list1[i])
-    
-    return matching_elements
+def main():
+    list1, list2 = parse_file('input1.txt')
+    if not list1 or not list2:
+        print("Один из списков пуст или файл содержит некорректные данные.")
+        return
 
-def parse_file(a, b):
+    matching_elements = find_matching_elements(list1, list2)
+
+    save_in_file(matching_elements)
+
+    print("Совпадающие элементы:", matching_elements)
+
+
+def parse_file(filename):
+    list1 = []
+    list2 = []
     try:
-        with open('input.txt', 'r') as f:
+        with open(filename, 'r') as f:
             lines = f.readlines()
 
-            # Проверяем, что файл содержит ровно две строки
             if len(lines) != 2:
                 raise ValueError("Файл должен содержать ровно две строки.")
 
-            # Обрабатываем первую строку
             first_line = lines[0].strip()
             if not first_line:
                 raise ValueError("Первая строка пустая.")
-            
+
             first_numbers = first_line.split(",")
             try:
-                a.extend(int(el.strip()) for el in first_numbers)
+                list1 = [int(el.strip()) for el in first_numbers]
             except ValueError as e:
                 raise ValueError(f"Ошибка в первой строке: {e}")
 
-            # Обрабатываем вторую строку
             second_line = lines[1].strip()
             if not second_line:
                 raise ValueError("Вторая строка пустая.")
-            
+
             second_numbers = second_line.split(",")
             try:
-                b.extend(int(el.strip()) for el in second_numbers)
+                list2 = [int(el.strip()) for el in second_numbers]
             except ValueError as e:
                 raise ValueError(f"Ошибка во второй строке: {e}")
 
     except FileNotFoundError:
-        print("Ошибка: Файл 'input2.txt' не найден.")
+        print(f"Ошибка: Файл '{filename}' не найден.")
     except ValueError as e:
         print(f"Ошибка: {e}")
     except Exception as e:
         print(f"Неизвестная ошибка: {e}")
 
-# def parse_file(a, b):
-#    with open('input2.txt', 'r') as f:
-#         lines = f.readlines()
-#         if len(lines) == 2:
-#             first_line = lines[0].strip() 
-#             first_numbers = first_line.split(",")  
-#             if len(first_numbers) == 0:
-#                 print("Первый массив пустой")
-#                 return
+    return list1, list2
 
-#             for el in first_numbers:
-#                 a.append(int(el.strip()))
-            
-#             second_line = lines[1].strip()  
-#             second_numbers = second_line.split(",")  
-#             if len(second_numbers) == 0:
-#                 print("Второй массив пустой")
-#                 return
-#             for el in second_numbers:
-#                 b.append(int(el.strip()))
-#         else:
-#             print("Невернные входные данные")
-        
-def save_in_file(c):
-    ans = ""
-    for i in range(len(c)):
-        if i == 0:
-            ans += str(c[i])
-        else:
-            ans += ", " + str(c[i])
+
+def find_matching_elements(list1, list2):
+    matching_elements = []
+    min_length = min(len(list1), len(list2))
+
+    for i in range(min_length):
+        if list1[i] == list2[i]:
+            matching_elements.append(list1[i])
+
+    return matching_elements
+
+
+def save_in_file(elements):
+    if not elements:
+        print("Нет совпадающих элементов для сохранения.")
+        return
 
     with open("output.txt", "w") as file:
-        file.write(ans)
+        file.write(", ".join(map(str, elements)))
 
-    
+
 if __name__ == '__main__':
     main()
