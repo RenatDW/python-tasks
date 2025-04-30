@@ -1,0 +1,45 @@
+Index: main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>def main():\n    list1, list2 = parse_file('input5.txt')\n    if not list1 or not list2:\n        print(\"Один из списков пуст или файл содержит некорректные данные.\")\n        return\n\n    matching_elements = find_matching_elements(list1, list2)\n\n    save_in_file(matching_elements)\n\n    print(\"Совпадающие элементы:\", matching_elements)\n\n\ndef parse_file(filename):\n    list1 = []\n    list2 = []\n    try:\n        with open(filename, 'r') as f:\n            lines = f.readlines()\n\n            if len(lines) != 2:\n                raise ValueError(\"Файл должен содержать ровно две строки.\")\n\n            first_line = lines[0].strip()\n            if not first_line:\n                raise ValueError(\"Первая строка пустая.\")\n\n            first_numbers = first_line.split(\",\")\n            try:\n                list1 = [int(el.strip()) for el in first_numbers]\n            except ValueError as e:\n                raise ValueError(f\"Ошибка в первой строке: {e}\")\n\n            second_line = lines[1].strip()\n            if not second_line:\n                raise ValueError(\"Вторая строка пустая.\")\n\n            second_numbers = second_line.split(\",\")\n            try:\n                list2 = [int(el.strip()) for el in second_numbers]\n            except ValueError as e:\n                raise ValueError(f\"Ошибка во второй строке: {e}\")\n\n    except FileNotFoundError:\n        print(f\"Ошибка: Файл '{filename}' не найден.\")\n    except ValueError as e:\n        print(f\"Ошибка: {e}\")\n    except Exception as e:\n        print(f\"Неизвестная ошибка: {e}\")\n\n    return list1, list2\n\n\ndef find_matching_elements(list1, list2):\n    matching_elements = []\n    min_length = min(len(list1), len(list2))\n\n    for i in range(min_length):\n        if list1[i] == list2[i]:\n            matching_elements.append(list1[i])\n\n    return matching_elements\n\n\ndef save_in_file(elements):\n    if not elements:\n        print(\"Нет совпадающих элементов для сохранения.\")\n        return\n\n    with open(\"output.txt\", \"w\") as file:\n        file.write(\", \".join(map(str, elements)))\n\n\nif __name__ == '__main__':\n    main()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/main.py b/main.py
+--- a/main.py	(revision aaa0b75fe57186cd2c6777af39e19720d2c1f8a9)
++++ b/main.py	(date 1746015601870)
+@@ -1,5 +1,5 @@
+ def main():
+-    list1, list2 = parse_file('input5.txt')
++    list1, list2 = parse_file('input1.txt')
+     if not list1 or not list2:
+         print("Один из списков пуст или файл содержит некорректные данные.")
+         return
+Index: input1.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>1, 16, 4, 10, 7, 11, 1, -2\n1, 16, 4, 10, 7, 11, 1, -2
+===================================================================
+diff --git a/input1.txt b/input1.txt
+--- a/input1.txt	(revision aaa0b75fe57186cd2c6777af39e19720d2c1f8a9)
++++ b/input1.txt	(date 1746015598533)
+@@ -1,2 +1,2 @@
+-1, 16, 4, 10, 7, 11, 1, -2
+-1, 16, 4, 10, 7, 11, 1, -2
+\ No newline at end of file
++1, 16, 4, 4, 7, 11, 1, -2
++1, 16, 4, 10, 7, 8, 1, -2
+\ No newline at end of file
+Index: output.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>1, 16, 4, 10, 7, 11, 1, -2
+===================================================================
+diff --git a/output.txt b/output.txt
+--- a/output.txt	(revision aaa0b75fe57186cd2c6777af39e19720d2c1f8a9)
++++ b/output.txt	(date 1746015603940)
+@@ -1,1 +1,1 @@
+-1, 16, 4, 10, 7, 11, 1, -2
+\ No newline at end of file
++1, 16, 4, 7, 1, -2
+\ No newline at end of file
