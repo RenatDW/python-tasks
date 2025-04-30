@@ -1,11 +1,28 @@
-import re
 from collections import Counter
 import os
 
 
+def is_word_char(c):
+    """Проверяет, является ли символ буквой или цифрой"""
+    return c.isalpha() or c.isdigit()
+
+
 def find_words_with_three_identical_letters(text):
     """Находит слова с 3+ одинаковыми буквами"""
-    words = re.findall(r'[A-Za-zА-Яа-я0-9]+', text)
+    words = []
+    current_word = []
+
+    for char in text:
+        if is_word_char(char):
+            current_word.append(char)
+        else:
+            if current_word:
+                words.append(''.join(current_word))
+                current_word = []
+    # Добавляем последнее слово, если текст не заканчивается разделителем
+    if current_word:
+        words.append(''.join(current_word))
+
     result = []
     for word in words:
         letter_counts = Counter(char.lower() for char in word if char.isalpha())
@@ -15,8 +32,9 @@ def find_words_with_three_identical_letters(text):
     seen = set()
     unique_result = []
     for word in result:
-        if word.lower() not in seen:
-            seen.add(word.lower())
+        lower_word = word.lower()
+        if lower_word not in seen:
+            seen.add(lower_word)
             unique_result.append(word)
 
     return unique_result
@@ -30,8 +48,10 @@ def process_text_file(input_path, output_path):
             words = find_words_with_three_identical_letters(text)
 
         with open(output_path, 'w', encoding='utf-8') as file:
-            for word in words:
-                file.write(word + "\n")
+            file.write("Слова с 3+ одинаковыми буквами:\n")
+            file.write("---------------------------\n")
+            for i, word in enumerate(words, 1):
+                file.write(f"{i}. {word}\n")
 
         print(f"Результат успешно записан в файл: {output_path}")
         return True
@@ -51,7 +71,8 @@ def main():
 
     if not os.path.exists(input_file):
         print(f"Файл {input_file} не существует")
-        print("Создайте файл input.txt в той же папке или укажите правильный путь")
+        print("Пример содержимого input.txt:")
+        print("ааабввв коооордината тееест привет аааа 123ааа456\nШшшабв Гооород тест 111222333")
         return
 
     success = process_text_file(input_file, output_file)
