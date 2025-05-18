@@ -11,13 +11,18 @@ from game_logic import Game
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.game = Game()  # Стандартные параметры 9x9, 5 цветов
+        self.game = Game()
         self.init_ui()
         self.game.add_random_balls(3)
 
     def init_ui(self):
         self.setWindowTitle("Линии 98")
-        self.setFixedSize(600, 700)
+        self.setMinimumSize(600, 700)
+        widget_size = self.game.grid_size * 60
+        self.setMaximumSize(widget_size + 50, widget_size + 150)
+
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -142,11 +147,10 @@ class MainWindow(QMainWindow):
         rules_window = RulesWindow(self)
         rules_window.exec_()
 
-
     def show_game_over(self):
         """Показывает сообщение об окончании игры"""
         if self.game.is_new_record:
-            self.game.save_record()  # Сохраняем рекорд перед показом сообщения
+            self.game.save_record()  # Сохраняем рекорд
             message = f"Новый рекорд! {self.game.score}"
         else:
             message = f"Игра окончена! Счёт: {self.game.score}\nРекорд: {self.game.record}"
@@ -168,11 +172,13 @@ class GameWidget(QWidget):
         super().__init__(parent)
         self.game = game
         self.parent_window = parent
-        self.update_cell_size()  # Вычисляем размер клетки
+        self.update_cell_size()
 
     def update_cell_size(self):
         """Обновляет размер клетки при изменении размера поля"""
-        self.cell_size = 600 // self.game.grid_size
+        widget_size = min(self.width(), self.height())
+        self.cell_size = widget_size // self.game.grid_size
+        print(f"Обновлён cell_size: {self.cell_size} для grid_size={self.game.grid_size}")
         self.update()
 
     def paintEvent(self, event):
@@ -202,14 +208,15 @@ class GameWidget(QWidget):
                 if self.game.grid[x][y] != 0:
                     color = colors[self.game.grid[x][y] - 1]
                     painter.setBrush(QBrush(color))
+                    ball_size = max(int(self.cell_size * 0.8), 10)
+                    offset = (self.cell_size - ball_size) // 2
                     painter.drawEllipse(
-                        x * self.cell_size + 5,
-                        y * self.cell_size + 5,
-                        self.cell_size - 10,
-                        self.cell_size - 10
+                        x * self.cell_size + offset,
+                        y * self.cell_size + offset,
+                        ball_size,
+                        ball_size
                     )
 
-                # Выделение выбранного шарика
                 if self.game.selected_ball == (x, y):
                     painter.setBrush(Qt.NoBrush)
                     painter.setPen(QColor(0, 180, 0))
@@ -222,25 +229,22 @@ class GameWidget(QWidget):
                     painter.setPen(Qt.gray)
 
     def mousePressEvent(self, event):
+        self.update_cell_size()
         x = event.x() // self.cell_size
         y = event.y() // self.cell_size
 
         if not self.game.is_valid_position(x, y, self.game.grid_size):
             return
 
-        # Если клик на уже выделенный шарик - снимаем выделение
         if self.game.selected_ball == (x, y):
             self.game.deselect_ball()
             self.update()
             return
 
-        # Если клик на другой шарик - выделяем его
         if self.game.grid[x][y] != 0:
             self.game.select_ball(x, y)
             self.update()
             return
-
-        # Если клик на пустую клетку и есть выделенный шарик
 
         if self.game.selected_ball:
             start_x, start_y = self.game.selected_ball
@@ -250,9 +254,8 @@ class GameWidget(QWidget):
                 return
 
             if self.game.move_ball(x, y):
-                self.parent_window.update_score()  # Это теперь обновит и шарики
+                self.parent_window.update_score()
                 if self.game.is_game_over:
                     self.parent_window.show_game_over()
-
 
         self.update()

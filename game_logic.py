@@ -4,8 +4,6 @@ import os
 from typing import List, Tuple, Optional
 
 class Game:
-    import random
-
     def __init__(self, grid_size: int = 9, colors: int = 5):
         self.grid_size = grid_size
         self.colors_count = colors
@@ -13,7 +11,7 @@ class Game:
         self.next_balls = []
         self.selected_ball = None
         self.score = 0
-        self.record = 0
+        self.record = self.load_record()  # Загружаем рекорд при инициализации
         self.generate_next_balls(3)
 
     def generate_next_balls(self, count: int):
@@ -34,37 +32,45 @@ class Game:
 
     @property
     def is_new_record(self) -> bool:
+        """Проверяет, побит ли текущий рекорд"""
         return self.score > self.record
 
     @staticmethod
     def get_record_path() -> str:
         """Возвращает абсолютный путь к файлу рекордов"""
-        dir_path = os.path.dirname(os.path.abspath(__file__))
-        return os.path.join(dir_path, 'lines98_record.json')
+        try:
+            dir_path = os.path.dirname(os.path.abspath(__file__))
+        except NameError:
+            # Если __file__ недоступен, используем домашнюю директорию
+            dir_path = os.path.expanduser("~")
+        record_path = os.path.join(dir_path, 'lines98_record.json')
+        print(f"Путь к файлу рекордов: {record_path}")
+        return record_path
 
     def load_record(self) -> int:
         """Загружает рекорд из файла"""
-        record_file = self.get_record_path()
         try:
-            if os.path.exists(record_file):
-                with open(record_file, 'r') as f:
+            if os.path.exists(self.get_record_path()):
+                with open(self.get_record_path(), 'r') as f:
                     data = json.load(f)
-                    return data.get('record', 0)
-            return 0
+                    record = data.get('record', 0)
+                    print(f"Загружен рекорд: {record}")
+                    return record
+            else:
+                print("Файл рекордов не найден")
         except Exception as e:
             print(f"Ошибка загрузки рекорда: {e}")
-            return 0
-
+        return 0
     def save_record(self):
-            """Сохраняет рекорд в файл"""
-            if self.is_new_record:
-                try:
-                    record_file = self.get_record_path()
-                    with open(record_file, 'w') as f:
-                        json.dump({'record': self.score}, f)
-                    self.record = self.score
-                except Exception as e:
-                    print(f"Ошибка сохранения рекорда: {e}")
+        """Сохраняет рекорд только если он побит"""
+        if self.is_new_record:
+            self.record = self.score  # Обновляем рекорд сразу
+            try:
+                with open(self.get_record_path(), 'w') as f:
+                    json.dump({'record': self.record}, f)
+                print(f"Рекорд {self.record} успешно сохранён")
+            except Exception as e:
+                print(f"Ошибка сохранения рекорда: {e}")
 
     @property
     def is_game_over(self) -> bool:
