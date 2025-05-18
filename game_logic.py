@@ -11,44 +11,53 @@ class Game:
         self.next_balls = []
         self.selected_ball = None
         self.score = 0
-        self.record = self.load_record()  # Загружаем рекорд при инициализации
+        self.record = self.load_record()
         self.generate_next_balls(3)
 
     def generate_next_balls(self, count: int):
         self.next_balls = [random.randint(1, self.colors_count) for _ in range(count)]
 
-    def add_random_balls(self, count: int) -> bool:
+    def add_random_balls(self, count: int) -> int:
         empty_cells = [(x, y) for x in range(self.grid_size)
                        for y in range(self.grid_size) if self.grid[x][y] == 0]
-
         if not empty_cells:
-            return False
+            print("Нет пустых клеток для добавления шариков")
+            return 0
 
+        added = 0
         for _ in range(min(count, len(empty_cells))):
             x, y = random.choice(empty_cells)
             self.grid[x][y] = random.randint(1, self.colors_count)
             empty_cells.remove((x, y))
-        return True
+            added += 1
+        print(f"Добавлено {added} шариков")
+        return added
 
     @property
     def is_new_record(self) -> bool:
-        """Проверяет, побит ли текущий рекорд"""
         return self.score > self.record
 
     @staticmethod
     def get_record_path() -> str:
-        """Возвращает абсолютный путь к файлу рекордов"""
         try:
             dir_path = os.path.dirname(os.path.abspath(__file__))
         except NameError:
-            # Если __file__ недоступен, используем домашнюю директорию
             dir_path = os.path.expanduser("~")
         record_path = os.path.join(dir_path, 'lines98_record.json')
         print(f"Путь к файлу рекордов: {record_path}")
         return record_path
 
+    @staticmethod
+    def get_settings_path() -> str:
+        try:
+            dir_path = os.path.dirname(os.path.abspath(__file__))
+        except NameError:
+            dir_path = os.path.expanduser("~")
+        settings_path = os.path.join(dir_path, 'lines98_settings.json')
+        print(f"Путь к файлу настроек: {settings_path}")
+        return settings_path
+
     def load_record(self) -> int:
-        """Загружает рекорд из файла"""
         try:
             if os.path.exists(self.get_record_path()):
                 with open(self.get_record_path(), 'r') as f:
@@ -61,10 +70,10 @@ class Game:
         except Exception as e:
             print(f"Ошибка загрузки рекорда: {e}")
         return 0
+
     def save_record(self):
-        """Сохраняет рекорд только если он побит"""
         if self.is_new_record:
-            self.record = self.score  # Обновляем рекорд сразу
+            self.record = self.score
             try:
                 with open(self.get_record_path(), 'w') as f:
                     json.dump({'record': self.record}, f)
@@ -72,27 +81,44 @@ class Game:
             except Exception as e:
                 print(f"Ошибка сохранения рекорда: {e}")
 
+    @classmethod
+    def load_settings(cls) -> dict:
+        try:
+            if os.path.exists(cls.get_settings_path()):
+                with open(cls.get_settings_path(), 'r') as f:
+                    data = json.load(f)
+                    print(f"Загружены настройки: {data}")
+                    return data
+            else:
+                print("Файл настроек не найден")
+        except Exception as e:
+            print(f"Ошибка загрузки настроек: {e}")
+        return {'grid_size': 9, 'colors': 5}
+
+    def save_settings(self):
+        try:
+            with open(self.get_settings_path(), 'w') as f:
+                json.dump({'grid_size': self.grid_size, 'colors': self.colors_count}, f)
+            print(f"Настройки сохранены: grid_size={self.grid_size}, colors={self.colors_count}")
+        except Exception as e:
+            print(f"Ошибка сохранения настроек: {e}")
+
     @property
     def is_game_over(self) -> bool:
-        """Проверяет, остались ли свободные клетки"""
         return all(cell != 0 for row in self.grid for cell in row)
 
     @staticmethod
     def is_valid_position(x: int, y: int, grid_size: int) -> bool:
-        """Проверяет, что координаты в пределах поля"""
         return 0 <= x < grid_size and 0 <= y < grid_size
 
     def deselect_ball(self) -> None:
-        """Снимает выделение с шарика"""
         self.selected_ball = None
 
     def select_ball(self, x: int, y: int) -> None:
-        """Выбирает шарик для перемещения"""
         if self.is_valid_position(x, y, self.grid_size) and self.grid[x][y] != 0:
             self.selected_ball = (x, y)
 
     def move_ball(self, x: int, y: int) -> bool:
-        """Перемещает выбранный шарик"""
         if not self.selected_ball or self.grid[x][y] != 0:
             return False
 
@@ -109,7 +135,6 @@ class Game:
         return True
 
     def _find_path(self, start_x: int, start_y: int, end_x: int, end_y: int) -> bool:
-        """Поиск пути (алгоритм BFS)"""
         from collections import deque
         queue = deque()
         queue.append((start_x, start_y))
@@ -131,39 +156,26 @@ class Game:
         return False
 
     def _check_lines(self, x: int, y: int) -> bool:
-        """Проверяет линии из 5+ шариков в 4 направлениях (→, ↓, ↘, ↙)"""
         color = self.grid[x][y]
         if color == 0:
             return False
 
-        directions = [
-            (1, 0),  # Горизонталь →
-            (0, 1),  # Вертикаль ↓
-            (1, 1),  # Диагональ ↘
-            (1, -1)  # Диагональ ↙
-        ]
-
+        directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
         balls_to_remove = set()
         total_removed = False
 
         for dx, dy in directions:
             line = [(x, y)]
-
-            # Проверяем в одну сторону
             nx, ny = x + dx, y + dy
             while self.is_valid_position(nx, ny, self.grid_size) and self.grid[nx][ny] == color:
                 line.append((nx, ny))
                 nx += dx
                 ny += dy
-
-            # Проверяем в противоположную сторону
             nx, ny = x - dx, y - dy
             while self.is_valid_position(nx, ny, self.grid_size) and self.grid[nx][ny] == color:
                 line.append((nx, ny))
                 nx -= dx
                 ny -= dy
-
-            # Если линия длиной 5+ — добавляем в набор на удаление
             if len(line) >= 5:
                 balls_to_remove.update(line)
                 total_removed = True

@@ -1,6 +1,5 @@
 from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QSpinBox, QDialogButtonBox
-from game_logic import Game  # Добавляем импорт класса Game
-
+from game_logic import Game
 
 class SettingsWindow(QDialog):
     def __init__(self, parent=None):
@@ -30,7 +29,6 @@ class SettingsWindow(QDialog):
         layout.addWidget(buttons)
 
     def apply_settings(self):
-        """Применяет новые настройки и перезапускает игру"""
         new_size = self.size_spin.value()
         new_colors = self.colors_spin.value()
         print(f"Применение настроек: размер={new_size}, цветов={new_colors}")
@@ -38,14 +36,12 @@ class SettingsWindow(QDialog):
         if (new_size != self.parent.game.grid_size or
                 new_colors != self.parent.game.colors_count):
             self.parent.game = Game(grid_size=new_size, colors=new_colors)
+            self.parent.game.save_settings()  # Сохраняем настройки
             self.parent.game_widget.game = self.parent.game
             self.parent.game_widget.update_cell_size()
             self.parent.game.add_random_balls(3)
             self.parent.update_score()
             self.parent.update_next_balls()
             self.parent.game_widget.update()
-            widget_size = new_size * 60
-            self.parent.setMaximumSize(widget_size + 50, widget_size + 150)
-            print(f"Новое поле: {new_size}x{new_size}, cell_size={self.parent.game_widget.cell_size}")
 
         self.accept()
