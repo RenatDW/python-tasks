@@ -13,8 +13,6 @@ def find_words_with_three_identical_letters(text):
                 if word not in result_set:
                     result_set.add(word)
                     ans.append(word)
-
-    # Шаг 3: Преобразуем множество в список
     return ans
 
 
@@ -32,19 +30,16 @@ def devide_text_by_word(text):
         words.append(current_word)
     return words
 
+if __name__ == "__main__":
+    with open('input.txt', 'r') as file:
+        textAfterEdit = file.read()
 
-with open('input.txt', 'r') as file:
-    textAfterEdit = file.read()
+    inputText = textAfterEdit
 
-inputText = textAfterEdit
-
-textAfterEdit = find_words_with_three_identical_letters(inputText)
-with open('output.txt', 'w') as file:
-    for i in range(len(textAfterEdit)):
-        if i == 0:
-            file.write(textAfterEdit[i])
-        else:
-            file.write(" " + textAfterEdit[i])
-
-
-
+    textAfterEdit = find_words_with_three_identical_letters(inputText)
+    with open('output.txt', 'w') as file:
+        for i in range(len(textAfterEdit)):
+            if i == 0:
+                file.write(textAfterEdit[i])
+            else:
+                file.write(" " + textAfterEdit[i]) А
