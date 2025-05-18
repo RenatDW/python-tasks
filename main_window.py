@@ -18,8 +18,8 @@ class MainWindow(QMainWindow):
     def init_ui(self):
         self.setWindowTitle("Линии 98")
         screen = QApplication.primaryScreen().availableGeometry()
-        window_width = int(screen.width() * 0.8)
-        window_height = int(screen.height() * 0.8)
+        window_width = int(500)
+        window_height = int(600)
         self.setGeometry(
             (screen.width() - window_width) // 2,
             (screen.height() - window_height) // 2,
@@ -39,12 +39,12 @@ class MainWindow(QMainWindow):
 
         score_panel = QVBoxLayout()
         self.score_label = QLabel(f"Счёт: {self.game.score}")
-        self.score_label.setFont(QFont('Arial', 12, QFont.Bold))
+        self.score_label.setFont(QFont('Arial', 20, QFont.Bold))
         self.score_label.setAlignment(Qt.AlignLeft)
         score_panel.addWidget(self.score_label)
 
         self.record_label = QLabel(f"Рекорд: {self.game.record}")
-        self.record_label.setFont(QFont('Arial', 10))
+        self.record_label.setFont(QFont('Arial', 16))
         self.record_label.setAlignment(Qt.AlignLeft)
         self.record_label.setStyleSheet("color: black;")
         score_panel.addWidget(self.record_label)

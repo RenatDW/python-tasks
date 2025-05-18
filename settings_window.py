@@ -17,9 +17,9 @@ class SettingsWindow(QDialog):
         self.size_spin.setValue(self.parent.game.grid_size)
         layout.addWidget(self.size_spin)
 
-        layout.addWidget(QLabel("Количество цветов (3-8):"))
+        layout.addWidget(QLabel("Количество цветов (3-5):"))
         self.colors_spin = QSpinBox()
-        self.colors_spin.setRange(3, 8)
+        self.colors_spin.setRange(3, 5)
         self.colors_spin.setValue(self.parent.game.colors_count)
         layout.addWidget(self.colors_spin)
 
