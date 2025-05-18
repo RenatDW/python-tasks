@@ -1,45 +1,20 @@
-from collections import Counter
+import sys
+from PyQt5.QtWidgets import QApplication
+from main_window import MainWindow
 
 
-def find_words_with_three_identical_letters(text):
-    words = devide_text_by_word(text)
-    ans = []
-    result_set = set()
-    for word in words:
-        letters = [char for char in word if char.isalpha()]
-        if letters:
-            counter = Counter(letters)
-            if max(counter.values()) >= 3:
-                if word not in result_set:
-                    result_set.add(word)
-                    ans.append(word)
-    return ans
+def main():
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
 
+    # Сохраняем рекорд при закрытии окна
+    def on_exit():
+        window.game.save_record()
 
-def devide_text_by_word(text):
-    words = []
-    current_word = ""
-    for char in text:
-        if char.isalnum():
-            current_word += char
-        else:
-            if current_word:
-                words.append(current_word)
-                current_word = ""
-    if current_word:
-        words.append(current_word)
-    return words
+    app.aboutToQuit.connect(on_exit)
+    sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
-    with open('input.txt', 'r') as file:
-        textAfterEdit = file.read()
-
-    inputText = textAfterEdit
-
-    textAfterEdit = find_words_with_three_identical_letters(inputText)
-    with open('output.txt', 'w') as file:
-        for i in range(len(textAfterEdit)):
-            if i == 0:
-                file.write(textAfterEdit[i])
-            else:
-                file.write(" " + textAfterEdit[i]) А
+    main()
