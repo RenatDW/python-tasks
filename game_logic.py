@@ -18,15 +18,15 @@ class Game:
         self.next_balls = [random.randint(1, self.colors_count) for _ in range(count)]
         print(f"Сгенерированы новые next_balls: {self.next_balls}")
 
-    def add_random_balls(self, count: int) -> int:
+    def add_random_balls(self, count: int) -> bool:
+        """Places random balls and checks for lines. Returns True if lines were removed."""
         empty_cells = [(x, y) for x in range(self.grid_size)
                        for y in range(self.grid_size) if self.grid[x][y] == 0]
         if not empty_cells:
             print("Нет пустых клеток для добавления шариков")
-            return 0
+            return False
 
         added = 0
-        # Use colors from next_balls if available, otherwise generate new ones
         colors_to_use = self.next_balls[:min(count, len(self.next_balls))]
         if len(colors_to_use) < count:
             colors_to_use.extend([random.randint(1, self.colors_count) for _ in range(count - len(colors_to_use))])
@@ -36,10 +36,13 @@ class Game:
             self.grid[x][y] = color
             empty_cells.remove((x, y))
             added += 1
+        print(f"Добавлено {added} шариков с цветами: {colors_to_use[:added]}")
 
-        # Generate new next_balls for the next move
+        # Check the entire grid for lines after placing balls
+        lines_removed = self.check_full_grid()
+        # Always regenerate next_balls, whether lines were removed or not
         self.generate_next_balls(3)
-        return added
+        return lines_removed
 
     @property
     def is_new_record(self) -> bool:
@@ -135,11 +138,12 @@ class Game:
         self.grid[x][y] = self.grid[start_x][start_y]
         self.grid[start_x][start_y] = 0
         self.selected_ball = None
-        if not self._check_lines(x, y):
+        # Check the entire grid for lines after the move
+        if not self.check_full_grid():
+            # If no lines were removed, place random balls and check again
             self.add_random_balls(3)
         else:
-            # Ensure next_balls is refreshed even if lines are formed
-            self.generate_next_balls(3)
+            self.generate_next_balls(3)  # Update next_balls if lines were removed
         return True
 
     def _find_path(self, start_x: int, start_y: int, end_x: int, end_y: int) -> bool:
@@ -161,13 +165,35 @@ class Game:
                     queue.append((nx, ny))
         return False
 
-    def _check_lines(self, x: int, y: int) -> bool:
-        color = self.grid[x][y]
-        if color == 0:
-            return False
-        directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
+    def check_full_grid(self) -> bool:
+        """Проверяет всё поле на наличие линий из 5+ шариков одного цвета."""
         balls_to_remove = set()
         total_removed = False
+
+        for x in range(self.grid_size):
+            for y in range(self.grid_size):
+                if self.grid[x][y] != 0:
+                    lines = self._check_lines(x, y)
+                    if lines:
+                        balls_to_remove.update(lines)
+                        total_removed = True
+
+        if total_removed:
+            for bx, by in balls_to_remove:
+                self.grid[bx][by] = 0
+            self.score += len(balls_to_remove) * 10
+            print(f"Удалено {len(balls_to_remove)} шариков, начислено {len(balls_to_remove) * 10} очков")
+        return total_removed
+
+    def _check_lines(self, x: int, y: int) -> set:
+        """Проверяет линии, проходящие через клетку (x, y), возвращает множество шариков для удаления."""
+        color = self.grid[x][y]
+        if color == 0:
+            return set()
+
+        directions = [(1, 0), (0, 1), (1, 1), (1, -1)]
+        balls_to_remove = set()
+
         for dx, dy in directions:
             line = [(x, y)]
             nx, ny = x + dx, y + dy
@@ -182,10 +208,5 @@ class Game:
                 ny -= dy
             if len(line) >= 5:
                 balls_to_remove.update(line)
-                total_removed = True
-        if total_removed:
-            for bx, by in balls_to_remove:
-                self.grid[bx][by] = 0
-            self.score += len(balls_to_remove) * 10
-            return True
-        return False
+
+        return balls_to_remove

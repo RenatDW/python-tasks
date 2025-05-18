@@ -14,6 +14,7 @@ class MainWindow(QMainWindow):
         self.init_ui()
         self.game.add_random_balls(3)
         self.update_next_balls()
+        self.update_score()  # Update score and record after initial ball placement
 
     def init_ui(self):
         self.setWindowTitle("Линии 98")
@@ -107,16 +108,15 @@ class MainWindow(QMainWindow):
         self.game.add_random_balls(3)
         self.update_score()
         self.update_next_balls()
-        self.record_label.setText(f"Рекорд: {self.game.record}")  # Update record label
+        self.record_label.setText(f"Рекорд: {self.game.record}")
         self.game_widget.update_cell_size()
         self.game_widget.update()
 
     def update_score(self):
         self.score_label.setText(f"Счёт: {self.game.score}")
         self.update_next_balls()
-        # Update record if a new record is set
         if self.game.is_new_record:
-            self.game.save_record()  # Save new record immediately
+            self.game.save_record()
             self.record_label.setText(f"Рекорд: {self.game.score}")
             self.record_label.setStyleSheet("color: red; font-weight: bold;")
         else:
