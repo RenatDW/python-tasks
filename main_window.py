@@ -13,12 +13,11 @@ class MainWindow(QMainWindow):
         self.game = Game(grid_size=settings['grid_size'], colors=settings['colors'])
         self.init_ui()
         self.game.add_random_balls(3)
+        self.update_next_balls()
 
     def init_ui(self):
         self.setWindowTitle("Линии 98")
-        # Получаем размер экрана
         screen = QApplication.primaryScreen().availableGeometry()
-        # Устанавливаем размер окна как 80% от размера экрана
         window_width = int(screen.width() * 0.8)
         window_height = int(screen.height() * 0.8)
         self.setGeometry(
@@ -27,7 +26,7 @@ class MainWindow(QMainWindow):
             window_width,
             window_height
         )
-        self.setMinimumSize(400, 500)  # Минимальный размер окна
+        self.setMinimumSize(400, 500)
 
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -77,11 +76,9 @@ class MainWindow(QMainWindow):
             self.next_ball_labels.append(ball_label)
             next_balls_panel.addWidget(ball_label)
 
-        main_layout.addLayout(next_balls_panel)  # Исправлено: добавляем next_balls_panel
+        main_layout.addLayout(next_balls_panel)
         self.game_widget = GameWidget(self.game, self)
         main_layout.addWidget(self.game_widget)
-
-        self.update_next_balls()
 
     def update_next_balls(self):
         colors = [
@@ -100,6 +97,7 @@ class MainWindow(QMainWindow):
             painter.drawEllipse(5, 5, 20, 20)
             painter.end()
             self.next_ball_labels[i].setPixmap(pixmap)
+        print(f"Обновлены next_balls в UI: {self.game.next_balls[:3]}")
 
     def new_game(self):
         current_grid_size = self.game.grid_size
@@ -109,16 +107,22 @@ class MainWindow(QMainWindow):
         self.game.add_random_balls(3)
         self.update_score()
         self.update_next_balls()
+        self.record_label.setText(f"Рекорд: {self.game.record}")  # Update record label
         self.game_widget.update_cell_size()
         self.game_widget.update()
 
     def update_score(self):
         self.score_label.setText(f"Счёт: {self.game.score}")
         self.update_next_balls()
+        # Update record if a new record is set
         if self.game.is_new_record:
-            self.record_label.setStyleSheet("color: red; fil")
+            self.game.save_record()  # Save new record immediately
+            self.record_label.setText(f"Рекорд: {self.game.score}")
+            self.record_label.setStyleSheet("color: red; font-weight: bold;")
         else:
+            self.record_label.setText(f"Рекорд: {self.game.record}")
             self.record_label.setStyleSheet("color: black; font-weight: normal;")
+        print(f"Обновлён рекорд в UI: {self.game.record}")
 
     def show_settings(self):
         from settings_window import SettingsWindow
@@ -136,7 +140,6 @@ class MainWindow(QMainWindow):
             message = f"Новый рекорд! {self.game.score}"
         else:
             message = f"Игра окончена! Счёт: {self.game.score}\nРекорд: {self.game.record}"
-
         msg = QMessageBox()
         msg.setWindowTitle("Конец игры")
         msg.setText(message)
