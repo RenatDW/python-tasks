@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (
     QPushButton, QLabel, QSpacerItem, QSizePolicy, QMessageBox
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QFont, QPainter, QColor, QBrush
+from PyQt5.QtGui import QFont, QPainter, QColor, QBrush, QPixmap
 
 from game_logic import Game
 
@@ -13,7 +13,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.game = Game()  # Стандартные параметры 9x9, 5 цветов
         self.init_ui()
-        self.game.add_random_balls(5)
+        self.game.add_random_balls(3)
 
     def init_ui(self):
         self.setWindowTitle("Линии 98")
@@ -42,8 +42,7 @@ class MainWindow(QMainWindow):
         self.record_label = QLabel(f"Рекорд: {self.game.record}")
         self.record_label.setFont(QFont('Arial', 10))
         self.record_label.setAlignment(Qt.AlignLeft)
-        # Явно устанавливаем начальный стиль
-        self.record_label.setStyleSheet("color: black;")  # Добавлено
+        self.record_label.setStyleSheet("color: black;")
         score_panel.addWidget(self.record_label)
 
         top_panel.addLayout(score_panel)
@@ -55,7 +54,7 @@ class MainWindow(QMainWindow):
         buttons_panel = QHBoxLayout()
 
         btn_new_game = QPushButton("Новая игра")
-        btn_new_game.clicked.connect(self.new_game)  # Изменено на new_game
+        btn_new_game.clicked.connect(self.new_game)
         buttons_panel.addWidget(btn_new_game)
 
         btn_settings = QPushButton("Настройки")
@@ -68,22 +67,61 @@ class MainWindow(QMainWindow):
 
         top_panel.addLayout(buttons_panel)
 
+        # Панель "Следующие шарики"
+        next_balls_panel = QHBoxLayout()
+        next_balls_panel.addWidget(QLabel("Следующие:"))
+
+        self.next_ball_labels = []
+        for _ in range(3):  # Показываем 3 следующих шарика
+            ball_label = QLabel()
+            ball_label.setFixedSize(30, 30)
+            self.next_ball_labels.append(ball_label)
+            next_balls_panel.addWidget(ball_label)
+
+        main_layout.addLayout(next_balls_panel)  # Исправлено: используем main_layout вместо layout
+
         # Игровое поле
         self.game_widget = GameWidget(self.game, self)
         main_layout.addWidget(self.game_widget)
 
-    def new_game(self):  # Добавленный метод
+        self.update_next_balls()  # Первоначальное обновление
+
+
+    def update_next_balls(self):
+        """Обновляет отображение следующих шариков"""
+        colors = [
+            QColor(255, 0, 0),  # Красный
+            QColor(0, 255, 0),  # Зеленый
+            QColor(0, 0, 255),  # Синий
+            QColor(255, 255, 0),  # Желтый
+            QColor(255, 0, 255),  # Фиолетовый
+        ]
+
+        for i, ball in enumerate(self.game.next_balls[:3]):  # Показываем первые 3
+            pixmap = QPixmap(30, 30)
+            pixmap.fill(Qt.transparent)
+
+            painter = QPainter(pixmap)
+            painter.setBrush(QBrush(colors[ball - 1]))
+            painter.setPen(Qt.black)
+            painter.drawEllipse(5, 5, 20, 20)
+            painter.end()
+
+            self.next_ball_labels[i].setPixmap(pixmap)
+
+    def new_game(self):
         """Начинает новую игру"""
         self.game = Game()
         self.game_widget.game = self.game
-        self.game.add_random_balls(5)
+        self.game.add_random_balls(3)
         self.update_score()
+        self.update_next_balls()  # Обновляем отображение
         self.game_widget.update()
 
     def update_score(self):
-        """Обновляет отображение счёта и рекорда"""
+        """Обновляет отображение счёта и следующих шариков"""
         self.score_label.setText(f"Счёт: {self.game.score}")
-        self.record_label.setText(f"Рекорд: {self.game.record}")
+        self.update_next_balls()  # Обновляем после каждого хода
 
         # Подсветка нового рекорда
         if self.game.is_new_record:
@@ -203,6 +241,7 @@ class GameWidget(QWidget):
             return
 
         # Если клик на пустую клетку и есть выделенный шарик
+
         if self.game.selected_ball:
             start_x, start_y = self.game.selected_ball
             if not self.game._find_path(start_x, start_y, x, y):
@@ -211,8 +250,9 @@ class GameWidget(QWidget):
                 return
 
             if self.game.move_ball(x, y):
-                self.parent_window.update_score()
+                self.parent_window.update_score()  # Это теперь обновит и шарики
                 if self.game.is_game_over:
                     self.parent_window.show_game_over()
+
 
         self.update()

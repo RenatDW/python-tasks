@@ -4,13 +4,33 @@ import os
 from typing import List, Tuple, Optional
 
 class Game:
+    import random
+
     def __init__(self, grid_size: int = 9, colors: int = 5):
-        self.grid_size = grid_size  # Сохраняем параметр
-        self.colors_count = colors  # Сохраняем параметр
+        self.grid_size = grid_size
+        self.colors_count = colors
         self.grid = [[0 for _ in range(grid_size)] for _ in range(grid_size)]
+        self.next_balls = []
         self.selected_ball = None
         self.score = 0
-        self.record = self.load_record()
+        self.record = 0
+        self.generate_next_balls(3)
+
+    def generate_next_balls(self, count: int):
+        self.next_balls = [random.randint(1, self.colors_count) for _ in range(count)]
+
+    def add_random_balls(self, count: int) -> bool:
+        empty_cells = [(x, y) for x in range(self.grid_size)
+                       for y in range(self.grid_size) if self.grid[x][y] == 0]
+
+        if not empty_cells:
+            return False
+
+        for _ in range(min(count, len(empty_cells))):
+            x, y = random.choice(empty_cells)
+            self.grid[x][y] = random.randint(1, self.colors_count)
+            empty_cells.remove((x, y))
+        return True
 
     @property
     def is_new_record(self) -> bool:
@@ -59,19 +79,6 @@ class Game:
     def deselect_ball(self) -> None:
         """Снимает выделение с шарика"""
         self.selected_ball = None
-
-    def add_random_balls(self, count: int = 3) -> bool:
-        """Добавляет случайные шарики на поле"""
-        empty_cells = [(x, y) for x in range(self.grid_size)
-                      for y in range(self.grid_size) if self.grid[x][y] == 0]
-        if not empty_cells:
-            return False
-
-        for _ in range(min(count, len(empty_cells))):
-            x, y = random.choice(empty_cells)
-            self.grid[x][y] = random.randint(1, self.colors_count)
-            empty_cells.remove((x, y))
-        return True
 
     def select_ball(self, x: int, y: int) -> None:
         """Выбирает шарик для перемещения"""
